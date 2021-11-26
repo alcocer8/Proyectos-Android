@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/tv_inicia_sesion"
+        android:layout_alignParentTop="true"
+        android:text="@string/tv_iniciar_sesion"
+        android:textSize="40sp"
+        android:layout_centerHorizontal="true"
+        android:layout_margin="20dp"
+        />
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/et_correo"
+        android:layout_below="@id/tv_inicia_sesion"
+        android:layout_marginHorizontal="30dp"
+        android:textAlignment="center"
+        android:hint="@string/et_correo"
+        android:inputType="textEmailAddress"
+        />
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/et_password"
+        android:layout_below="@id/et_correo"
+        android:layout_marginTop="30dp"
+        android:layout_marginHorizontal="30dp"
+        android:textAlignment="center"
+        android:hint="@string/et_correo"
+        android:inputType="textPassword"
+        />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/btn_ingresa"
+        android:layout_below="@id/et_password"
+        android:layout_margin="40dp"
+        android:text="@string/tv_iniciar_sesion"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/ll_1"
+        android:orientation="horizontal"
+        android:layout_below="@id/btn_ingresa">
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:id="@+id/btn_google"
+            android:drawableLeft="@drawable/ic_google"
+            android:backgroundTint="@color/white"
+            android:textColor="@color/black"
+            android:text="@string/btn_google"
+            android:layout_marginHorizontal="10dp"/>
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:id="@+id/btn_facebook"
+            android:drawableLeft="@drawable/ic_facebook"
+            android:backgroundTint="#FFFFFF"
+            android:textColor="@color/black"
+            android:text="@string/btn_facebook"
+            android:layout_marginHorizontal="10dp"/>
+
+
+
+    </LinearLayout>
+
+
+</RelativeLayout>
