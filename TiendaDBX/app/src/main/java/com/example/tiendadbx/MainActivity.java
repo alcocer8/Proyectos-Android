@@ -8,6 +8,8 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.google.firebase.auth.FirebaseAuth;
+
 public class MainActivity extends AppCompatActivity {
 
     @Override
@@ -26,16 +28,14 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
         Intent intent;
-        switch (id){
-            case R.id.ic_save:
-                intent = new Intent(getBaseContext(), ActivityCreate.class);
-                startActivity(intent);
-                break;
-            case R.id.ic_update:
-                intent = new Intent(getBaseContext(), ActivityRUD.class);
-                startActivity(intent);
-                break;
-            default: break;
+        if (id == R.id.ic_save) {
+            intent = new Intent(getBaseContext(), ActivityCreate.class);
+            startActivity(intent);
+        } else if (id == R.id.ic_update) {
+            intent = new Intent(getBaseContext(), ActivityRUD.class);
+            startActivity(intent);
+        } else if (id == R.id.menu_login) {
+            FirebaseAuth.getInstance().signOut();
         }
         return super.onOptionsItemSelected(item);
     }

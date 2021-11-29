@@ -28,4 +28,6 @@
     <string name="et_password">Contraseña</string>
     <string name="btn_registro">Registrar</string>
 
+    <string name="menu_registro"> Registro con Email</string>
+    <string name="menu_login">Login</string>
 </resources>
