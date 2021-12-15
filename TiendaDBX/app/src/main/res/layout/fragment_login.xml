@@ -56,25 +56,21 @@
 
         <Button
             android:id="@+id/btn_google"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="10dp"
+            android:layout_width="0dp"
             android:layout_weight="1"
+            android:layout_height="wrap_content"
             android:backgroundTint="@color/white"
             android:drawableLeft="@drawable/ic_google"
             android:text="@string/btn_google"
             android:textColor="@color/black" />
 
-        <Button
+
+        <com.facebook.login.widget.LoginButton
             android:id="@+id/btn_facebook"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="10dp"
+            android:layout_width="0dp"
             android:layout_weight="1"
-            android:backgroundTint="#FFFFFF"
-            android:drawableLeft="@drawable/ic_facebook"
-            android:text="@string/btn_facebook"
-            android:textColor="@color/black" />
+            android:layout_height="wrap_content"
+            />
 
 
     </LinearLayout>

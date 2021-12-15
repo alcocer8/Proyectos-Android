@@ -3,28 +3,25 @@ package com.example.tiendadbx;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.FragmentTransaction;
-
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Toast;
 
 public class ActivityLogin extends AppCompatActivity {
 
     LoginFragment fragmentLogin;
-    RegistroFragment fragmentRegistro;
+    RegistroFragment registroFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-
         fragments();
     }
 
     private void fragments() {
         fragmentLogin = new LoginFragment();
-        fragmentRegistro = new RegistroFragment();
+        registroFragment = new RegistroFragment();
 
         getSupportFragmentManager().beginTransaction().add(R.id.contenedor_frament, fragmentLogin).commit();
     }
@@ -40,13 +37,11 @@ public class ActivityLogin extends AppCompatActivity {
         int id = item.getItemId();
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
         if (id == R.id.menu_registro){
-            Toast.makeText(getBaseContext(), "Registro Menu", Toast.LENGTH_SHORT).show();
-            transaction.replace(R.id.contenedor_frament, fragmentRegistro);
-        }else if(id == R.id.menu_login){
-            transaction.replace(R.id.contenedor_frament, fragmentLogin);
+            transaction.replace(R.id.contenedor_frament, registroFragment);
         }
         transaction.commit();
 
         return super.onOptionsItemSelected(item);
     }
+
 }

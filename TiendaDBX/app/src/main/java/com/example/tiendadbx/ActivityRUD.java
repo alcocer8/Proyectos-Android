@@ -3,16 +3,14 @@ package com.example.tiendadbx;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SwitchCompat;
 
-import android.content.ContentValues;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
 import android.widget.Toast;
+import com.example.tiendadbx.BD.Articulos;
 import com.example.tiendadbx.BD.ArticulosContract;
 import com.example.tiendadbx.BD.ConectedBD;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -20,14 +18,17 @@ import com.journeyapps.barcodescanner.ScanContract;
 import com.journeyapps.barcodescanner.ScanOptions;
 
 public class ActivityRUD extends AppCompatActivity {
-
+    ConectedBD db;
     EditText et_nombre, et_id, et_cantidad, et_precio, et_descripcion;
+    SwitchCompat btn_flash;
+    boolean flash = false;
     FloatingActionButton btn_scanner;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_crud);
+        db = new ConectedBD(this,ArticulosContract.DATABASE_NAME,null,1);
         componentes();
         eventos();
     }
@@ -39,11 +40,13 @@ public class ActivityRUD extends AppCompatActivity {
         et_precio = findViewById(R.id.et_precio);
         et_descripcion = findViewById(R.id.et_descripcion);
 
+        btn_flash = findViewById(R.id.flash);
         btn_scanner = findViewById(R.id.btn_scanner);
     }
 
     private void eventos() {
-        btn_scanner.setOnClickListener( e -> scanner());
+        btn_scanner.setOnClickListener( e -> scanner() );
+        btn_flash.setOnCheckedChangeListener((buttonView, isChecked) -> flash = isChecked);
     }
 
     @Override
@@ -71,55 +74,36 @@ public class ActivityRUD extends AppCompatActivity {
     }
 
     private void consulta() {
-        //obteniendo el id a buscar
         String id = et_id.getText().toString();
-
-        //Validando que tengamos algo dentro de id
         if (!id.isEmpty()){
-            ConectedBD conectedBD = new ConectedBD(this, ArticulosContract.DATABASE_NAME,null,1);
-            SQLiteDatabase db = conectedBD.getReadableDatabase();
-            String sql = "SELECT "+ArticulosContract.NOMBRE+", "+ArticulosContract.PRECIO+","+ArticulosContract.CANTIDAD+","+ArticulosContract.DESCRIPCION+" FROM "+ArticulosContract.TABLE_NAME + " WHERE "+ArticulosContract._ID +" = "+id;
-            Log.i("Verbose", sql);
-
-            Cursor fila = db.rawQuery(sql, null);
-
-            //Si tenemos una concidencia se cumple la condicion y agregamos los campos encontrados en sus respectivos EditText
-            if (fila.moveToFirst()){
-                et_nombre.setText(fila.getString(0));
-                et_precio.setText(fila.getString(1));
-                et_cantidad.setText(fila.getString(2));
-                et_descripcion.setText(fila.getString(3));
+            Articulos articulo = db.obtenArticulo(et_id.getText().toString());
+            if(articulo != null){
+                et_nombre.setText(articulo.getNombre());
+                et_cantidad.setText(String.valueOf(articulo.getCantidad()));
+                et_precio.setText(String.valueOf(articulo.getPrecio()));
+                et_descripcion.setText(articulo.getDescripcion());
             }else{
-                Toast.makeText(getBaseContext(), "No existe dicho articulo:", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Error.", Toast.LENGTH_SHORT).show();
             }
-
-            //Cerrando el objecto tipo Cursor y la base de datos
-            fila.close();
-            db.close();
         }else{
-            Toast.makeText(getBaseContext(), "Ingrese un ID.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Ingrese un ID", Toast.LENGTH_SHORT).show();
         }
-
     }
 
     private void update(){
         String id = et_id.getText().toString();
-
         if (!id.isEmpty()){
-            ContentValues values = new ContentValues();
-            ConectedBD conectedBD = new ConectedBD(this, ArticulosContract.DATABASE_NAME,null,1);
-            SQLiteDatabase db = conectedBD.getReadableDatabase();
-
-            values.put(ArticulosContract.NOMBRE, et_nombre.getText().toString());
-            values.put(ArticulosContract.PRECIO, et_precio.getText().toString());
-            values.put(ArticulosContract.CANTIDAD, Integer.parseInt(et_cantidad.getText().toString()));
-            values.put(ArticulosContract.DESCRIPCION, et_descripcion.getText().toString());
-
-            //Actualizamos el elemento con el nombre de la tabla, un objecto contentValues y una clausula WHRERE
-            db.update(ArticulosContract.TABLE_NAME,values,"id = "+id,null);
-
-            db.close();
-            Toast.makeText(getBaseContext(), "Datos Actualizados", Toast.LENGTH_SHORT).show();
+            Articulos articulo = new Articulos();
+            articulo.setId(id);
+            articulo.setNombre(et_nombre.getText().toString());
+            articulo.setCantidad(Integer.parseInt(et_cantidad.getText().toString()));
+            articulo.setPrecio(Float.parseFloat(et_precio.getText().toString()));
+            articulo.setDescripcion(et_descripcion.getText().toString());
+            if (db.updateArticulo(articulo)){
+                Toast.makeText(getBaseContext(), "Datos Actualizados", Toast.LENGTH_SHORT).show();
+            }else{
+                Toast.makeText(this, "Error.", Toast.LENGTH_SHORT).show();
+            }
         }else{
             Toast.makeText(getBaseContext(), "Ingrese un ID.", Toast.LENGTH_SHORT).show();
         }
@@ -127,35 +111,34 @@ public class ActivityRUD extends AppCompatActivity {
 
     private void delete(){
         String id = et_id.getText().toString();
-
         if (!id.isEmpty()){
-            ConectedBD conectedBD = new ConectedBD(this, ArticulosContract.DATABASE_NAME,null,1);
-            SQLiteDatabase db = conectedBD.getReadableDatabase();
-
-            //Eliminado el elemento de BD
-            db.delete(ArticulosContract.TABLE_NAME,"id = "+id,null);
-
-            et_id.setText("");
-            et_nombre.setText("");
-            et_precio.setText("");
-            et_cantidad.setText("");
-            et_descripcion.setText("");
-
-            db.close();
-            Toast.makeText(getBaseContext(), "Datos Eliminados", Toast.LENGTH_SHORT).show();
+            if (db.deleteArticulo(id)){
+                Toast.makeText(this, "Articulo Eliminado", Toast.LENGTH_SHORT).show();
+                limpiaET();
+            }else{
+                Toast.makeText(this, "Error.", Toast.LENGTH_SHORT).show();
+            }
         }else{
             Toast.makeText(getBaseContext(), "Ingrese un ID.", Toast.LENGTH_SHORT).show();
         }
     }
 
+    private void limpiaET() {
+        et_id.setText("");
+        et_nombre.setText("");
+        et_cantidad.setText("");
+        et_precio.setText("");
+        et_descripcion.setText("");
+    }
+
     private void scanner() {
         barcodeLauncher.launch(new ScanOptions());
         ScanOptions options = new ScanOptions();
-        options.setDesiredBarcodeFormats(ScanOptions.ONE_D_CODE_TYPES);
-        options.setPrompt("Scan a barcode");
+        options.setDesiredBarcodeFormats(ScanOptions.ALL_CODE_TYPES);
         options.setCameraId(0);  // Use a specific camera of the device
         options.setBeepEnabled(true);
         options.setBarcodeImageEnabled(true);
+        options.setTorchEnabled(flash);
         barcodeLauncher.launch(options);
     }
 
@@ -168,6 +151,5 @@ public class ActivityRUD extends AppCompatActivity {
                     et_id.setText(result.getContents());
                 }
             });
-
 
 }

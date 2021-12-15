@@ -3,9 +3,11 @@ package com.example.tiendadbx.BD;
 public class Articulos {
     private String id, nombre, descripcion;
     private int cantidad;
-    private double precio;
+    private float precio;
 
-    public Articulos(String id, String nombre, String descripcion, int cantidad, double precio) {
+    public Articulos(){}
+
+    public Articulos(String id, String nombre, String descripcion, int cantidad, float precio) {
         this.id = id;
         this.nombre = nombre;
         this.descripcion = descripcion;
@@ -45,11 +47,11 @@ public class Articulos {
         this.cantidad = cantidad;
     }
 
-    public double getPrecio() {
+    public float getPrecio() {
         return precio;
     }
 
-    public void setPrecio(double precio) {
+    public void setPrecio(float precio) {
         this.precio = precio;
     }
 }

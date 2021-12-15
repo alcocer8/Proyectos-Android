@@ -1,110 +1,228 @@
 package com.example.tiendadbx;
 
-import android.app.Activity;
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
-
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
+
+import com.facebook.AccessToken;
+import com.facebook.CallbackManager;
+import com.facebook.FacebookCallback;
+import com.facebook.FacebookException;
+import com.facebook.login.LoginResult;
+import com.facebook.login.widget.LoginButton;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthCredential;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FacebookAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GoogleAuthProvider;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link LoginFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class LoginFragment extends Fragment {
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
+    private static final int RC_SIGN_IN = 123;
+    private CallbackManager callbackManager;
+    private static final String GOOGLE_ID_CLIENT_TOKEN = BuildConfig.GOOGLE_ID_CLIENT_TOKEN;
     private FirebaseAuth mAuth;
-    View vista;
+    private GoogleSignInClient mGoogleSignInClient;
     EditText et_correo, et_password;
-    Button btn_login, btn_face, btn_google;
+    Button btn_login, btn_google;
+    LoginButton btn_facebook;
 
     public LoginFragment() {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment LoginFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static LoginFragment newInstance(String param1, String param2) {
-        LoginFragment fragment = new LoginFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mAuth = FirebaseAuth.getInstance();
-
+        signGoogle();
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        vista = inflater.inflate(R.layout.fragment_login, container, false);
-        // Inflate the layout for this fragment
+        View vista = inflater.inflate(R.layout.fragment_login, container, false);
 
         et_correo = vista.findViewById(R.id.et_correo);
         et_password = vista.findViewById(R.id.et_password);
         btn_login = vista.findViewById(R.id.btn_ingresa);
+        btn_google = vista.findViewById(R.id.btn_google);
+        btn_facebook = vista.findViewById(R.id.btn_facebook);
 
-        btn_login.setOnClickListener( v -> {
-            String correo = et_correo.getText().toString();
-            String password = et_password.getText().toString();
 
-            if (!correo.isEmpty() && !password.isEmpty()){
-                if (password.length() >= 6){
-                    mAuth.signInWithEmailAndPassword(correo, password).addOnCompleteListener( (Activity) vista.getContext(), task -> {
-                        if (task.isSuccessful()){
-                            Intent intent = new Intent(vista.getContext(), MainActivity.class);
-                            //((Activity) vista.getContext()).finish();
-                            startActivity(intent);
-
-                        }else{
-                            Toast.makeText(vista.getContext(), "Error.", Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                }else{
-                    Toast.makeText(vista.getContext(), "Tu password debe ser mayor a 6", Toast.LENGTH_SHORT).show();
-                }
-            }else {
-                Toast.makeText(vista.getContext(), "Todos los campos son obligatorios", Toast.LENGTH_SHORT).show();
-            }
-        });
-
+        btn_login.setOnClickListener( v -> validaCampos());
+        btn_google.setOnClickListener( v -> signIn());
+        btn_facebook.setOnClickListener( v -> signInFacebook());
         return vista;
     }
 
+    private void signInFacebook() {
+        callbackManager = CallbackManager.Factory.create();
+        btn_facebook.setReadPermissions("email");
+        btn_facebook.setFragment(this);
+        btn_facebook.registerCallback(callbackManager, new FacebookCallback<LoginResult>(){
+
+            @Override
+            public void onSuccess(LoginResult loginResult) {
+                Log.i("LogFB","Pasas1");
+                handleFacebookAccessToken(loginResult.getAccessToken());
+            }
+
+            @Override
+            public void onCancel() {
+                Log.i("LogFB","Cancel");
+            }
+
+            @Override
+            public void onError(FacebookException error) {
+                Log.i("LogFB","Error");
+            }
+        });
+    }
+
+    private void handleFacebookAccessToken(AccessToken token) {
+
+        AuthCredential credential = FacebookAuthProvider.getCredential(token.getToken());
+        mAuth.signInWithCredential(credential)
+                .addOnCompleteListener(getActivity(), new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        Log.i("LogFB","Pasas");
+
+                        if (task.isSuccessful()) {
+                            // Sign in success, update UI with the signed-in user's information
+                            FirebaseUser user = mAuth.getCurrentUser();
+                            Log.i("LogFB","Pasas2");
+                            Intent intent = new Intent(getActivity(), MainActivity.class);
+                            startActivity(intent);
+                        } else {
+                            // If sign in fails, display a message to the user.
+                        }
+                    }
+                });
+    }
     @Override
     public void onStart() {
         super.onStart();
         FirebaseUser user = mAuth.getCurrentUser();
         if (user != null){
-            Intent intent = new Intent(vista.getContext(), MainActivity.class);
+            Intent intent = new Intent(getActivity(), MainActivity.class);
             startActivity(intent);
         }
     }
+
+
+
+    private void signGoogle() {
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(GOOGLE_ID_CLIENT_TOKEN)
+                .requestEmail()
+                .build();
+
+        mGoogleSignInClient = GoogleSignIn.getClient(getActivity(), gso);
+    }
+
+    private void signIn() {
+        Intent signInIntent = mGoogleSignInClient.getSignInIntent();
+        startActivityForResult(signInIntent, RC_SIGN_IN);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        //callbackManager.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == RC_SIGN_IN) {
+            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+            try {
+                GoogleSignInAccount account = task.getResult(ApiException.class);
+                firebaseAuthWithGoogle(account.getIdToken());
+            } catch (ApiException e) {}
+        }
+    }
+
+    private void firebaseAuthWithGoogle(String idToken) {
+        AuthCredential credential = GoogleAuthProvider.getCredential(idToken, null);
+        mAuth.signInWithCredential(credential)
+                .addOnCompleteListener(getActivity(), new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (task.isSuccessful()) {
+                            FirebaseUser user = mAuth.getCurrentUser();
+                            Intent intent = new Intent(getActivity(), MainActivity.class);
+                            startActivity(intent);
+                        }
+                    }
+                });
+    }
+
+
+    private void validaCampos(){
+        if (permissionInternet()){
+            return;
+        }
+
+        String correo = et_correo.getText().toString();
+        String password = et_password.getText().toString();
+
+        if (!correo.isEmpty() && !password.isEmpty()){
+            if (password.length() >= 6){
+                mAuth.signInWithEmailAndPassword(correo, password).addOnCompleteListener(  getActivity(), task -> {
+                    if (task.isSuccessful()){
+                        Intent intent = new Intent(getContext(), MainActivity.class);
+                        getActivity().finish();
+                        startActivity(intent);
+                    }else{
+                        Toast.makeText(getContext(), "Error.", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }else{
+                Toast.makeText(getContext(), "Tu password debe ser mayor a 6", Toast.LENGTH_SHORT).show();
+            }
+        }else {
+            Toast.makeText(getContext(), "Todos los campos son obligatorios", Toast.LENGTH_SHORT).show();
+        }
+
+    }
+
+    private boolean permissionInternet() {
+        Log.i("Permisso", "Obteniendo permiso");
+        int permission = getActivity().checkSelfPermission(Manifest.permission.INTERNET);
+        if (permission == PackageManager.PERMISSION_GRANTED){
+            requestPermissions(new String[]{Manifest.permission.INTERNET}, 1001);
+            Log.i("Permisso", "Permiso dado");
+            return false;
+        }
+
+        return true;
+    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (grantResults.length> 0 && requestCode == 1001){
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                Log.i("Permisso", "Permiso dado");}
+        }
+    }
+
 }

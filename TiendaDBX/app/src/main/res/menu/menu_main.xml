@@ -1,13 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:id="@+id/ic_save"
-        android:title="@string/ic_save"/>
-    <item
-        android:id="@+id/ic_update"
-        android:title="@string/ic_update"/>
-
-    <item
         android:id="@+id/menu_login"
         android:title="@string/menu_login">
     </item>

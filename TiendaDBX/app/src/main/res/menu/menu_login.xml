@@ -6,12 +6,4 @@
         android:title="@string/menu_registro">
     </item>
 
-    <item
-        android:id="@+id/menu_login"
-        android:title="@string/menu_login">
-    </item>
-
-
-
-
 </menu>

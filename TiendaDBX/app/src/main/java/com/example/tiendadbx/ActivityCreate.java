@@ -3,8 +3,9 @@ package com.example.tiendadbx;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SwitchCompat;
+
 import android.content.ContentValues;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -17,15 +18,17 @@ import com.journeyapps.barcodescanner.ScanContract;
 import com.journeyapps.barcodescanner.ScanOptions;
 
 public class ActivityCreate extends AppCompatActivity {
-
+    ConectedBD db;
     EditText et_nombre, et_id, et_cantidad, et_precio, et_descripcion;
+    SwitchCompat btn_flash;
+    boolean flash = false;
     FloatingActionButton btn_scanner;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_crud);
-        
+
 
         componentes();
         eventos();
@@ -38,12 +41,17 @@ public class ActivityCreate extends AppCompatActivity {
         et_precio = findViewById(R.id.et_precio);
         et_descripcion = findViewById(R.id.et_descripcion);
 
+        btn_flash = findViewById(R.id.flash);
         btn_scanner = findViewById(R.id.btn_scanner);
     }
 
     private void eventos() {
-        btn_scanner.setOnClickListener( e -> scanner());
+        btn_flash.setOnCheckedChangeListener((buttonView, isChecked) -> flash = isChecked);
+        btn_scanner.setOnClickListener(e -> scanner());
+
     }
+
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -54,12 +62,9 @@ public class ActivityCreate extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
-        if (id == R.id.ic_save){
+        if (id == R.id.ic_save) {
             try {
-                //Conectando y abriendo con la base de datos
-                ConectedBD conectedBD = new ConectedBD(this, ArticulosContract.DATABASE_NAME, null, 1);
-                SQLiteDatabase db = conectedBD.getReadableDatabase();
-
+                db = new ConectedBD(this, ArticulosContract.DATABASE_NAME, null, ArticulosContract.DATABASE_VERSION);
                 //ingresando los datos a un content value
                 ContentValues values = new ContentValues();
                 values.put(ArticulosContract._ID, et_id.getText().toString());
@@ -68,15 +73,11 @@ public class ActivityCreate extends AppCompatActivity {
                 values.put(ArticulosContract.CANTIDAD, Integer.parseInt(et_cantidad.getText().toString()));
                 values.put(ArticulosContract.DESCRIPCION, et_descripcion.getText().toString());
 
-                //Realizando la ejecucion del query
-                db.insert(ArticulosContract.TABLE_NAME, null, values);
-
+                db.createArticulo(values);
+                limpiaET();
                 Toast.makeText(this, "Datos Insertados", Toast.LENGTH_SHORT).show();
 
-                //Cerrando la base de datos
-                db.close();
-                conectedBD.close();
-            }catch (NumberFormatException e){
+            } catch (NumberFormatException e) {
                 Toast.makeText(getBaseContext(), "Todos los campos son obligatorios", Toast.LENGTH_SHORT).show();
             }
         }
@@ -84,26 +85,33 @@ public class ActivityCreate extends AppCompatActivity {
     }
 
     private void scanner() {
-        barcodeLauncher.launch(new ScanOptions());
         ScanOptions options = new ScanOptions();
-        options.setDesiredBarcodeFormats(ScanOptions.ONE_D_CODE_TYPES);
-        options.setPrompt("Scan a barcode");
+        options.setOrientationLocked(true);
+        options.setDesiredBarcodeFormats(ScanOptions.ALL_CODE_TYPES);
         options.setCameraId(0);  // Use a specific camera of the device
         options.setBeepEnabled(true);
         options.setBarcodeImageEnabled(true);
+        options.setTorchEnabled(flash);
         barcodeLauncher.launch(options);
     }
+
 
     // Register the launcher and result handler
     private final ActivityResultLauncher<ScanOptions> barcodeLauncher = registerForActivityResult(new ScanContract(),
             result -> {
-                if(result.getContents() == null) {
+                if (result.getContents() == null) {
                     Toast.makeText(this, "Cancelled", Toast.LENGTH_LONG).show();
                 } else {
                     et_id.setText(result.getContents());
                 }
             });
 
-
+    private void limpiaET() {
+        et_id.setText("");
+        et_nombre.setText("");
+        et_cantidad.setText("");
+        et_precio.setText("");
+        et_descripcion.setText("");
+    }
 
 }
